@@ -1,170 +1,98 @@
 <!DOCTYPE html>
 <html>
 <head>
-
-<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Florawings Chat</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
 
 <style>
 
 body{
-margin:0;
-font-family:Arial;
-background:#0f172a;
+background:#0b1b33;
+font-family:sans-serif;
 display:flex;
 justify-content:center;
 align-items:center;
 height:100vh;
+margin:0;
 }
 
-.chatBox{
-width:95%;
-max-width:420px;
-height:520px;
+#chat{
+width:350px;
 background:white;
-border-radius:12px;
+border-radius:10px;
 overflow:hidden;
+}
+
+#messages{
+height:300px;
+overflow:auto;
+padding:10px;
+}
+
+#input{
 display:flex;
-flex-direction:column;
-box-shadow:0 10px 30px rgba(0,0,0,0.4);
 }
 
-.header{
-background:#2563eb;
-color:white;
-padding:12px;
-text-align:center;
-font-size:18px;
-}
-
-.messages{
+#input input{
 flex:1;
 padding:10px;
-overflow:auto;
-background:#f1f5f9;
-font-size:14px;
-}
-
-.msgInput{
-display:flex;
-padding:8px;
-background:white;
+border:none;
 border-top:1px solid #ddd;
 }
 
-.msgInput input{
-flex:1;
-padding:8px;
-border:1px solid #ccc;
-border-radius:6px;
-}
-
-.msgInput button{
-margin-left:6px;
-padding:8px 14px;
-background:#22c55e;
-border:none;
+#input button{
+padding:10px;
+background:#28a745;
 color:white;
-border-radius:6px;
+border:none;
 }
 
 </style>
-
-<script src="/socket.io/socket.io.js"></script>
 
 </head>
 
 <body>
 
-<div class="chatBox">
+<div id="chat">
 
-<div class="header">
-Florawings Chat
-</div>
+<div id="messages"></div>
 
-<div class="messages" id="messages"></div>
-
-<div class="msgInput">
+<div id="input">
 <input id="msg" placeholder="Type message">
-<input type="file" id="img">
 <button onclick="send()">Send</button>
 </div>
 
 </div>
 
+<script src="/socket.io/socket.io.js"></script>
+
 <script>
 
-let socket = io();
+let socket = io()
 
-let name = localStorage.getItem("name");
+let name = prompt("Enter your name")
 
-if(!name){
-window.location.href="/login.html";
-}
-
-socket.emit("join",name);
+socket.emit("join",name)
 
 socket.on("system",(msg)=>{
-addMsg(msg);
-});
+let div=document.createElement("div")
+div.innerText=msg
+messages.appendChild(div)
+})
 
 socket.on("chat",(data)=>{
-
-let div=document.createElement("div");
-
-if(data.type==="text"){
-div.innerText=data.name+": "+data.msg;
-}
-
-if(data.type==="image"){
-div.innerHTML=data.name+"<br><img src='"+data.url+"' width='150'>";
-}
-
-document.getElementById("messages").appendChild(div);
-
-document.getElementById("messages").scrollTop=999999;
-
-});
+let div=document.createElement("div")
+div.innerText=data.user+": "+data.text
+messages.appendChild(div)
+})
 
 function send(){
 
-let text=document.getElementById("msg").value;
-let file=document.getElementById("img").files[0];
+let msg=document.getElementById("msg").value
 
-if(text){
+socket.emit("chat",msg)
 
-socket.emit("chat",{type:"text",msg:text});
-
-addMsg(name+": "+text);
-
-}
-
-if(file){
-
-let reader=new FileReader();
-
-reader.onload=function(e){
-
-socket.emit("chat",{type:"image",url:e.target.result});
-
-};
-
-reader.readAsDataURL(file);
-
-}
-
-document.getElementById("msg").value="";
-document.getElementById("img").value="";
-
-}
-
-function addMsg(m){
-
-let div=document.createElement("div");
-
-div.innerText=m;
-
-document.getElementById("messages").appendChild(div);
+document.getElementById("msg").value=""
 
 }
 
