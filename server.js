@@ -1,128 +1,56 @@
 const express = require("express")
 const http = require("http")
-const {Server} = require("socket.io")
+const { Server } = require("socket.io")
 
 const app = express()
 const server = http.createServer(app)
 const io = new Server(server)
 
-app.use(express.json())
 app.use(express.static("public"))
 
-let usersDB = []     // registered users
-let onlineUsers = []
-let messages = []
+let users = {}
 
-function createGuest(){
- return "Guest_"+Math.floor(Math.random()*9000+1000)
-}
+io.on("connection", (socket) => {
 
-app.post("/register",(req,res)=>{
+  socket.on("join", ({name, room}) => {
 
- const {username,password} = req.body
+    socket.join(room)
 
- usersDB.push({
-  username,
-  password,
-  role:"user",
-  gold:100,
-  color:"#000000",
-  avatar:"default.png"
- })
+    users[socket.id] = { name, room }
 
- res.json({success:true})
+    io.to(room).emit("system", name + " joined")
 
-})
-
-app.post("/login",(req,res)=>{
-
- const {username,password} = req.body
-
- const user = usersDB.find(
-  u=>u.username===username && u.password===password
- )
-
- if(user){
-  res.json(user)
- }else{
-  res.json({error:"invalid"})
- }
-
-})
-
-io.on("connection",(socket)=>{
-
- let currentUser = {
-  name:createGuest(),
-  role:"guest",
-  gold:0,
-  color:"#000"
- }
-
- socket.on("loginUser",(user)=>{
-  currentUser = user
- })
-
- socket.on("join",(room)=>{
-
-  socket.join(room)
-
-  onlineUsers.push({
-   id:socket.id,
-   name:currentUser.name
   })
 
-  io.to(room).emit("system",currentUser.name+" joined")
+  socket.on("chat", (msg) => {
 
- })
+    const user = users[socket.id]
 
- socket.on("chat",(data)=>{
+    if(!user) return
 
-  const msg = {
-   id:Date.now(),
-   name:currentUser.name,
-   msg:data.msg,
-   color:currentUser.color
-  }
+    io.to(user.room).emit("chat", {
+      name: user.name,
+      msg: msg
+    })
 
-  messages.push(msg)
+  })
 
-  io.emit("chat",msg)
+  socket.on("disconnect", () => {
 
- })
+    const user = users[socket.id]
 
- socket.on("deleteMsg",(id)=>{
+    if(user){
+      io.to(user.room).emit("system", user.name + " left")
+    }
 
-  if(currentUser.role!=="guest"){
+    delete users[socket.id]
 
-   messages = messages.filter(m=>m.id!==id)
-
-   io.emit("deleteMsg",id)
-
-  }
-
- })
-
- socket.on("promote",(data)=>{
-
-  if(currentUser.role==="owner"){
-
-   const u = usersDB.find(x=>x.username===data.user)
-
-   if(u){
-    u.role="moderator"
-   }
-
-  }
-
- })
-
- socket.on("disconnect",()=>{
-  onlineUsers = onlineUsers.filter(u=>u.id!==socket.id)
- })
+  })
 
 })
 
-server.listen(3000,()=>{
- console.log("Server running")
+const PORT = process.env.PORT || 3000
+
+server.listen(PORT, () => {
+  console.log("Server running on port " + PORT)
 })
