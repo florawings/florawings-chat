@@ -9,19 +9,24 @@ const io = new Server(server);
 app.use(express.json());
 app.use(express.static("public"));
 
-let users = [];   // registered users
-let online = {};  // socket users
+/* ---------------- USERS DATABASE (temporary memory) ---------------- */
 
-// REGISTER
+let users = [];
+let onlineUsers = {};
+
+/* ---------------- REGISTER ---------------- */
+
 app.post("/register", (req, res) => {
 
 const { username, email, password, dob, country } = req.body;
 
-if (!username || !password) {
+if (!username || !password || !email) {
 return res.json({ ok:false, msg:"Missing fields" });
 }
 
-if (users.find(u => u.username === username)) {
+let exists = users.find(u => u.username === username);
+
+if (exists) {
 return res.json({ ok:false, msg:"Username already exists" });
 }
 
@@ -31,19 +36,21 @@ email,
 password,
 dob,
 country,
-role:"user"
+role:"user",
+dp:""
 });
 
 res.json({ ok:true });
 
 });
 
-// LOGIN
+/* ---------------- LOGIN ---------------- */
+
 app.post("/login", (req, res) => {
 
 const { username, password } = req.body;
 
-const user = users.find(
+let user = users.find(
 u => u.username === username && u.password === password
 );
 
@@ -55,10 +62,52 @@ res.json({
 ok:true,
 name:user.username,
 role:user.role,
-dp:""
+dp:user.dp
 });
 
 });
 
-// SOCKET CHAT
-io.on("connection
+/* ---------------- SOCKET CHAT ---------------- */
+
+io.on("connection", (socket) => {
+
+socket.on("join", (name) => {
+
+onlineUsers[socket.id] = name;
+
+io.emit("system", name + " joined");
+
+});
+
+socket.on("chat", (msg) => {
+
+let name = onlineUsers[socket.id];
+
+io.emit("chat", {
+name:name,
+msg:msg
+});
+
+});
+
+socket.on("disconnect", () => {
+
+let name = onlineUsers[socket.id];
+
+if(name){
+io.emit("system", name + " left");
+}
+
+delete onlineUsers[socket.id];
+
+});
+
+});
+
+/* ---------------- START SERVER ---------------- */
+
+const PORT = process.env.PORT || 3000;
+
+server.listen(PORT, () => {
+console.log("Server running on port " + PORT);
+});
