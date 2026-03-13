@@ -1,101 +1,330 @@
-const express = require("express");
-const http = require("http");
-const { Server } = require("socket.io");
+const express = require("express")
+const http = require("http")
+const {Server} = require("socket.io")
 
-const app = express();
-const server = http.createServer(app);
-const io = new Server(server);
+const app = express()
+const server = http.createServer(app)
+const io = new Server(server)
 
-app.use(express.static("public"));
-app.use(express.json());
+let users={}
+let muted={}
+let banned=[]
 
-let users = {};
-let muted = {};
-let banned = [];
+app.get("/",(req,res)=>{
 
-io.on("connection", (socket) => {
+res.send(`
+<!DOCTYPE html>
+<html>
+<head>
 
-  socket.on("join", (name) => {
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-    if (banned.includes(name)) {
-      socket.emit("system","You are banned");
-      socket.disconnect();
-      return;
-    }
+<title>Florawings Chat</title>
 
-    users[socket.id] = name;
+<style>
 
-    io.emit("system", name + " joined");
+body{
+margin:0;
+font-family:Arial;
+background:#0f172a;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+color:white;
+}
 
-    updateUsers();
+.box{
+width:95%;
+max-width:700px;
+background:#1e293b;
+border-radius:10px;
+overflow:hidden;
+display:flex;
+}
 
-  });
+.chat{
+flex:3;
+display:flex;
+flex-direction:column;
+background:white;
+color:black;
+}
 
-  socket.on("chat", (msg) => {
+.users{
+flex:1;
+background:#0f172a;
+padding:10px;
+}
 
-    let name = users[socket.id];
+.messages{
+flex:1;
+overflow:auto;
+padding:10px;
+}
 
-    if (muted[name]) return;
+.input{
+display:flex;
+padding:10px;
+border-top:1px solid #ccc;
+}
 
-    io.emit("chat", { name, msg });
+.input input{
+flex:1;
+padding:8px;
+}
 
-  });
+button{
+margin-left:5px;
+padding:8px;
+}
 
-  socket.on("kick", (target) => {
+.login{
+position:absolute;
+top:20px;
+}
 
-    for (let id in users) {
-      if (users[id] === target) {
-        io.to(id).emit("system","You were kicked by admin");
-        io.sockets.sockets.get(id)?.disconnect();
-      }
-    }
+</style>
 
-  });
+<script src="/socket.io/socket.io.js"></script>
 
-  socket.on("mute", (target) => {
+</head>
 
-    muted[target] = true;
+<body>
 
-    io.emit("system", target + " was muted");
+<div class="login">
 
-  });
+<input id="name" placeholder="username">
 
-  socket.on("ban", (target) => {
+<button onclick="login()">Join</button>
 
-    banned.push(target);
+</div>
 
-    for (let id in users) {
-      if (users[id] === target) {
-        io.sockets.sockets.get(id)?.disconnect();
-      }
-    }
+<div class="box">
 
-  });
+<div class="chat">
 
-  socket.on("disconnect", () => {
+<div class="messages" id="messages"></div>
 
-    let name = users[socket.id];
+<div class="input">
 
-    delete users[socket.id];
+<input id="msg">
 
-    io.emit("system", name + " left");
+<input type="file" id="img">
 
-    updateUsers();
+<button onclick="send()">Send</button>
 
-  });
+</div>
 
-  function updateUsers(){
+</div>
 
-    let list = Object.values(users);
+<div class="users">
 
-    io.emit("users", list);
+<b>Online</b>
 
-  }
+<div id="users"></div>
 
-});
+<hr>
 
-const PORT = process.env.PORT || 3000;
+<b>Admin</b>
 
-server.listen(PORT, () => {
-  console.log("Server running on port " + PORT);
-});
+<input id="adminUser" placeholder="username">
+
+<button onclick="kick()">Kick</button>
+<button onclick="mute()">Mute</button>
+<button onclick="ban()">Ban</button>
+
+</div>
+
+</div>
+
+<script>
+
+let socket = io()
+let name=""
+
+function login(){
+
+name=document.getElementById("name").value
+
+socket.emit("join",name)
+
+}
+
+socket.on("system",(msg)=>addMsg(msg))
+
+socket.on("chat",(data)=>{
+
+let div=document.createElement("div")
+
+if(data.type==="text"){
+div.innerText=data.name+": "+data.msg
+}
+
+if(data.type==="image"){
+div.innerHTML=data.name+"<br><img src='"+data.url+"' width='120'>"
+}
+
+document.getElementById("messages").appendChild(div)
+
+})
+
+socket.on("users",(list)=>{
+
+let box=document.getElementById("users")
+
+box.innerHTML=""
+
+list.forEach(u=>{
+
+let d=document.createElement("div")
+d.innerText=u
+
+box.appendChild(d)
+
+})
+
+})
+
+function send(){
+
+let text=document.getElementById("msg").value
+let file=document.getElementById("img").files[0]
+
+if(text){
+
+socket.emit("chat",{type:"text",msg:text})
+
+}
+
+if(file){
+
+let r=new FileReader()
+
+r.onload=function(e){
+
+socket.emit("chat",{type:"image",url:e.target.result})
+
+}
+
+r.readAsDataURL(file)
+
+}
+
+document.getElementById("msg").value=""
+
+}
+
+function kick(){
+
+socket.emit("kick",document.getElementById("adminUser").value)
+
+}
+
+function mute(){
+
+socket.emit("mute",document.getElementById("adminUser").value)
+
+}
+
+function ban(){
+
+socket.emit("ban",document.getElementById("adminUser").value)
+
+}
+
+function addMsg(m){
+
+let d=document.createElement("div")
+
+d.innerText=m
+
+document.getElementById("messages").appendChild(d)
+
+}
+
+</script>
+
+</body>
+</html>
+`)
+
+})
+
+io.on("connection",(socket)=>{
+
+socket.on("join",(name)=>{
+
+if(banned.includes(name)){
+socket.emit("system","You are banned")
+socket.disconnect()
+return
+}
+
+users[socket.id]=name
+
+io.emit("system",name+" joined")
+
+updateUsers()
+
+})
+
+socket.on("chat",(data)=>{
+
+let name=users[socket.id]
+
+if(muted[name]) return
+
+io.emit("chat",{name,...data})
+
+})
+
+socket.on("kick",(u)=>{
+
+for(let id in users){
+if(users[id]===u){
+io.sockets.sockets.get(id)?.disconnect()
+}
+}
+
+})
+
+socket.on("mute",(u)=>{
+
+muted[u]=true
+
+})
+
+socket.on("ban",(u)=>{
+
+banned.push(u)
+
+})
+
+socket.on("disconnect",()=>{
+
+let name=users[socket.id]
+
+delete users[socket.id]
+
+io.emit("system",name+" left")
+
+updateUsers()
+
+})
+
+function updateUsers(){
+
+io.emit("users",Object.values(users))
+
+}
+
+})
+
+const PORT=process.env.PORT||3000
+
+server.listen(PORT,()=>{
+
+console.log("Server running")
+
+})
