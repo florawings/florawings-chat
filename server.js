@@ -1,88 +1,64 @@
-const express = require("express")
-const http = require("http")
-const {Server} = require("socket.io")
-const bodyParser = require("body-parser")
+const express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
 
-const app = express()
-const server = http.createServer(app)
-const io = new Server(server)
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
 
-app.use(express.static("public"))
-app.use(bodyParser.json())
+app.use(express.json());
+app.use(express.static("public"));
 
-let usersDB = []
+let users = [];   // registered users
+let online = {};  // socket users
 
 // REGISTER
-app.post("/register",(req,res)=>{
+app.post("/register", (req, res) => {
 
-const {username,email,password,dob,country}=req.body
+const { username, email, password, dob, country } = req.body;
 
-if(!username || !email || !password){
-return res.json({ok:false,msg:"Missing fields"})
+if (!username || !password) {
+return res.json({ ok:false, msg:"Missing fields" });
 }
 
-let exist = usersDB.find(u=>u.email===email)
-
-if(exist){
-return res.json({ok:false,msg:"Email already registered"})
+if (users.find(u => u.username === username)) {
+return res.json({ ok:false, msg:"Username already exists" });
 }
 
-usersDB.push({username,email,password,dob,country})
+users.push({
+username,
+email,
+password,
+dob,
+country,
+role:"user"
+});
 
-res.json({ok:true})
+res.json({ ok:true });
 
-})
+});
 
 // LOGIN
-app.post("/login",(req,res)=>{
+app.post("/login", (req, res) => {
 
-const {username,password}=req.body
+const { username, password } = req.body;
 
-let user = usersDB.find(
-u=>u.username===username && u.password===password
-)
+const user = users.find(
+u => u.username === username && u.password === password
+);
 
-if(!user){
-return res.json({ok:false})
+if (!user) {
+return res.json({ ok:false });
 }
 
-res.json({ok:true,name:user.username})
+res.json({
+ok:true,
+name:user.username,
+role:user.role,
+dp:""
+});
 
-})
+});
 
-// CHAT
-
-let online = {}
-
-io.on("connection",(socket)=>{
-
-socket.on("join",(name)=>{
-
-online[socket.id]=name
-io.emit("msg",name+" joined")
-
-})
-
-socket.on("chat",(data)=>{
-
-io.emit("msg",data.name+": "+data.msg)
-
-})
-
-socket.on("disconnect",()=>{
-
-let name=online[socket.id]
-
-if(name){
-io.emit("msg",name+" left")
-}
-
-delete online[socket.id]
-
-})
-
-})
-
-server.listen(3000,()=>{
-console.log("Server started")
-})
+// SOCKET CHAT
+io.on("connection
