@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Florawings Chat</title>
-
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Florawings Chat</title>
 
 <style>
 
@@ -60,96 +59,3 @@ font-size:14px;
 display:flex;
 padding:8px;
 background:white;
-border-top:1px solid #ddd;
-}
-
-.msgInput input{
-flex:1;
-padding:8px;
-border:1px solid #ccc;
-border-radius:6px;
-}
-
-.msgInput button{
-margin-left:6px;
-padding:8px 14px;
-background:#22c55e;
-border:none;
-color:white;
-border-radius:6px;
-}
-
-</style>
-
-<script src="/socket.io/socket.io.js"></script>
-
-</head>
-
-<body>
-
-<div class="chatBox">
-
-<div class="header">
-Florawings Chat
-</div>
-
-<div class="rooms">
-Rooms<br>
-<div>Main room</div>
-<div>Adult room</div>
-<div>Hindi room</div>
-</div>
-
-<div class="messages" id="messages"></div>
-
-<div class="msgInput">
-<input id="msg" placeholder="Type message">
-<button onclick="send()">Send</button>
-</div>
-
-</div>
-
-<script>
-
-let socket = io();
-let name = localStorage.getItem("name") || "Guest_"+Math.floor(Math.random()*9999);
-
-socket.emit("join",name);
-
-socket.on("system",(msg)=>{
-addMsg(msg);
-});
-
-socket.on("chat",(data)=>{
-addMsg(data.name+": "+data.msg);
-});
-
-function send(){
-
-let msg=document.getElementById("msg").value;
-
-if(!msg) return;
-
-socket.emit("chat",msg);
-
-addMsg(name+": "+msg);
-
-document.getElementById("msg").value="";
-
-}
-
-function addMsg(m){
-
-let div=document.createElement("div");
-div.innerText=m;
-
-document.getElementById("messages").appendChild(div);
-
-document.getElementById("messages").scrollTop=999999;
-
-}
-
-</script>
-
-</body>
-</html>
