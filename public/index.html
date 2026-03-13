@@ -1,99 +1,88 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Florawings Chat</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
 
 <style>
-
 body{
-background:#0b1b33;
-font-family:sans-serif;
-display:flex;
-justify-content:center;
-align-items:center;
-height:100vh;
 margin:0;
-}
-
-#chat{
-width:350px;
-background:white;
-border-radius:10px;
-overflow:hidden;
-}
-
-#messages{
-height:300px;
-overflow:auto;
-padding:10px;
-}
-
-#input{
+height:100vh;
 display:flex;
+align-items:center;
+justify-content:center;
+font-family:sans-serif;
+background:url("https://images.unsplash.com/photo-1529156069898-49953e39b3ac") no-repeat center;
+background-size:cover;
 }
 
-#input input{
-flex:1;
+.box{
+background:white;
+padding:25px;
+width:280px;
+text-align:center;
+border-radius:10px;
+box-shadow:0 10px 25px rgba(0,0,0,0.4);
+}
+
+h2{
+color:#e91e63;
+margin-bottom:15px;
+}
+
+input{
+width:100%;
+padding:8px;
+margin:5px 0;
+border:1px solid #ccc;
+}
+
+button{
+width:100%;
 padding:10px;
+margin-top:6px;
 border:none;
-border-top:1px solid #ddd;
-}
-
-#input button{
-padding:10px;
-background:#28a745;
 color:white;
-border:none;
+cursor:pointer;
 }
 
+.login{background:#4CAF50;}
+.guest{background:black;}
+.register{background:#2196F3;}
 </style>
-
 </head>
 
 <body>
 
-<div id="chat">
+<div class="box">
 
-<div id="messages"></div>
+<h2>Florawings Chat</h2>
 
-<div id="input">
-<input id="msg" placeholder="Type message">
-<button onclick="send()">Send</button>
+<input id="username" placeholder="Username">
+<input id="password" type="password" placeholder="Password">
+
+<button class="login" onclick="login()">Login</button>
+<button class="guest" onclick="guest()">Guest Login</button>
+<button class="register" onclick="register()">Register</button>
+
 </div>
-
-</div>
-
-<script src="/socket.io/socket.io.js"></script>
 
 <script>
 
-let socket = io()
+function login(){
+let name=document.getElementById("username").value
+localStorage.setItem("chatname",name)
+window.location="chat.html"
+}
 
-let name = prompt("Enter your name")
+function guest(){
+let name="Guest"+Math.floor(Math.random()*1000)
+localStorage.setItem("chatname",name)
+window.location="chat.html"
+}
 
-socket.emit("join",name)
-
-socket.on("system",(msg)=>{
-let div=document.createElement("div")
-div.innerText=msg
-messages.appendChild(div)
-})
-
-socket.on("chat",(data)=>{
-let div=document.createElement("div")
-div.innerText=data.user+": "+data.text
-messages.appendChild(div)
-})
-
-function send(){
-
-let msg=document.getElementById("msg").value
-
-socket.emit("chat",msg)
-
-document.getElementById("msg").value=""
-
+function register(){
+window.location="register.html"
 }
 
 </script>
