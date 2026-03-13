@@ -1,70 +1,189 @@
 <!DOCTYPE html>
 <html>
 <head>
+
 <title>Florawings Chat</title>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial;
+}
+
+.container{
+display:flex;
+height:100vh;
+}
+
+.rooms{
+width:200px;
+border-right:1px solid #ccc;
+padding:10px;
+}
+
+.users{
+width:200px;
+border-left:1px solid #ccc;
+padding:10px;
+}
+
+.chatbox{
+flex:1;
+display:flex;
+flex-direction:column;
+}
+
+#chat{
+flex:1;
+overflow:auto;
+padding:10px;
+}
+
+.input{
+display:flex;
+padding:10px;
+border-top:1px solid #ccc;
+}
+
+.input input{
+flex:1;
+padding:8px;
+}
+
+</style>
+
 </head>
 
 <body>
 
+<div class="container">
+
+<div class="rooms">
+
+<h3>Rooms</h3>
+
+<div id="rooms"></div>
+
+</div>
+
+<div class="chatbox">
+
 <h2>Florawings Chat</h2>
 
 <input id="name" placeholder="Name">
-<input id="room" placeholder="Room">
-<button id="joinBtn">Join</button>
 
-<br><br>
+<div id="chat"></div>
+
+<div class="input">
 
 <input id="msg" placeholder="Message">
+
 <button id="sendBtn">Send</button>
 
-<div id="chat" style="height:300px;border:1px solid #ccc;overflow:auto;padding:10px;"></div>
+</div>
+
+</div>
+
+<div class="users">
+
+<h3>Online</h3>
+
+<div id="users"></div>
+
+</div>
+
+</div>
 
 <script src="/socket.io/socket.io.js"></script>
 
 <script>
+
 const socket = io();
 
-let myName = "";
-let myRoom = "";
+let myName="";
+let myRoom="";
 
-document.getElementById("joinBtn").onclick = function(){
-  myName = document.getElementById("name").value;
-  myRoom = document.getElementById("room").value;
+fetch("/rooms")
+.then(res=>res.json())
+.then(data=>{
 
-  socket.emit("join",{name:myName,room:myRoom});
+data.forEach(room=>{
+
+const div=document.createElement("div");
+
+div.innerText=room.name;
+
+div.style.cursor="pointer";
+
+div.onclick=()=>{
+
+myName=document.getElementById("name").value;
+
+myRoom=room.id;
+
+socket.emit("join",{name:myName,room:myRoom});
+
 }
 
-document.getElementById("sendBtn").onclick = function(){
+document.getElementById("rooms").appendChild(div);
 
-  const msg = document.getElementById("msg").value;
+});
 
-  socket.emit("chat",{
-    name:myName,
-    msg:msg
-  });
+});
 
-  document.getElementById("msg").value="";
+document.getElementById("sendBtn").onclick=()=>{
+
+const msg=document.getElementById("msg").value;
+
+socket.emit("chat",{
+name:myName,
+room:myRoom,
+msg:msg
+});
+
+document.getElementById("msg").value="";
+
 }
 
 socket.on("chat",(data)=>{
 
-  const div=document.createElement("div");
+const div=document.createElement("div");
 
-  div.innerText=data.name + ": " + data.msg;
+div.innerText=data.name+": "+data.msg;
 
-  document.getElementById("chat").appendChild(div);
+document.getElementById("chat").appendChild(div);
 
 });
 
 socket.on("system",(msg)=>{
 
-  const div=document.createElement("div");
+const div=document.createElement("div");
 
-  div.innerText=msg;
+div.innerText=msg;
 
-  document.getElementById("chat").appendChild(div);
+document.getElementById("chat").appendChild(div);
 
 });
+
+socket.on("users",(users)=>{
+
+const box=document.getElementById("users");
+
+box.innerHTML="";
+
+users.forEach(u=>{
+
+const div=document.createElement("div");
+
+div.innerText=u.name;
+
+box.appendChild(div);
+
+});
+
+});
+
 </script>
 
 </body>
