@@ -45,11 +45,10 @@ document.getElementById("sendBtn").onclick = function(){
   document.getElementById("msg").value = "";
 }
 
-{
 socket.on("chat",(data)=>{
- const div = document.createElement("div");
- div.innerText = data.name + ": " + (data.msg || data.message);
- document.getElementById("chat").appendChild(div);
+  const div = document.createElement("div");
+  div.innerText = data.name + ": " + data.msg;
+  document.getElementById("chat").appendChild(div);
 });
 
 socket.on("system",(msg)=>{
