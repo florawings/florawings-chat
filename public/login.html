@@ -1,32 +1,35 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Florawings Chat</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Florawings Login</title>
 
 <style>
-
 body{
 margin:0;
 font-family:Arial;
+background:#0f172a;
 height:100vh;
 display:flex;
-justify-content:center;
 align-items:center;
-background:url("https://images.unsplash.com/photo-1529156069898-49953e39b3ac") center/cover;
+justify-content:center;
 }
 
 .box{
-background:rgba(255,255,255,0.9);
-padding:30px;
-border-radius:10px;
+background:white;
+padding:25px;
 width:320px;
+border-radius:10px;
 text-align:center;
+box-shadow:0 10px 25px rgba(0,0,0,0.4);
 }
 
-input,select{
+input{
 width:100%;
 padding:10px;
 margin-top:8px;
+border:1px solid #ccc;
+border-radius:6px;
 }
 
 button{
@@ -34,17 +37,16 @@ width:100%;
 padding:10px;
 margin-top:10px;
 border:none;
+border-radius:6px;
 color:white;
 cursor:pointer;
-font-size:15px;
 }
 
-.login{background:#4CAF50;}
+.login{background:#22c55e;}
 .guest{background:black;}
-.register{background:#2196F3;}
+.register{background:#3b82f6;}
 
 </style>
-
 </head>
 
 <body>
@@ -53,30 +55,12 @@ font-size:15px;
 
 <h2>Florawings Chat</h2>
 
-<h3>Login</h3>
-
-<input id="user" placeholder="Username">
+<input id="name" placeholder="Username">
 <input id="pass" type="password" placeholder="Password">
 
 <button class="login" onclick="login()">Login</button>
+
 <button class="guest" onclick="guest()">Guest Login</button>
-
-<hr>
-
-<h3>Register</h3>
-
-<input id="ruser" placeholder="Username">
-<input id="remail" placeholder="Email">
-<input id="rpass" type="password" placeholder="Password">
-<input id="rdob" type="date">
-
-<select id="rcountry">
-<option>India</option>
-<option>USA</option>
-<option>UK</option>
-<option>Pakistan</option>
-<option>Bangladesh</option>
-</select>
 
 <button class="register" onclick="register()">Register</button>
 
@@ -84,72 +68,34 @@ font-size:15px;
 
 <script>
 
-async function login(){
+function login(){
 
-let res = await fetch("/login",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({
-username:document.getElementById("user").value,
-password:document.getElementById("pass").value
-})
-})
+let name=document.getElementById("name").value;
 
-let data = await res.json()
-
-if(data.ok){
-
-localStorage.setItem("name",data.name)
-localStorage.setItem("role",data.role)
-localStorage.setItem("dp",data.dp)
-
-window.location.href="/"
-
-}else{
-
-alert("Wrong username or password")
-
+if(!name){
+alert("Enter username");
+return;
 }
+
+localStorage.setItem("name",name);
+
+window.location.href="/";
 
 }
 
 function guest(){
 
-let g="Guest_"+Math.floor(Math.random()*10000)
+let g="Guest_"+Math.floor(Math.random()*9999);
 
-localStorage.setItem("name",g)
+localStorage.setItem("name",g);
 
-window.location.href="/"
-
-}
-
-async function register(){
-
-let res = await fetch("/register",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({
-
-username:document.getElementById("ruser").value,
-email:document.getElementById("remail").value,
-password:document.getElementById("rpass").value,
-dob:document.getElementById("rdob").value,
-country:document.getElementById("rcountry").value
-
-})
-})
-
-let data = await res.json()
-
-if(data.ok){
-
-alert("Registration successful")
-
-}else{
-
-alert(data.msg)
+window.location.href="/";
 
 }
+
+function register(){
+
+alert("Register form next step me add hoga");
 
 }
 
