@@ -1,47 +1,54 @@
-<script>
+<!DOCTYPE html>
+<html>
+<head>
+<title>Florawings Chat</title>
 
-async function login(){
-
-let username = document.getElementById("user").value
-let password = document.getElementById("pass").value
-
-let res = await fetch("/login",{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-username:username,
-password:password
-})
-})
-
-let data = await res.json()
-
-if(data.ok){
-
-localStorage.setItem("name",data.name)
-localStorage.setItem("role",data.role)
-localStorage.setItem("dp",data.dp)
-
-window.location.href="/"
-
-}else{
-
-alert("Login failed")
-
+<style>
+body{
+margin:0;
+font-family:Arial;
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+background:url("https://images.unsplash.com/photo-1529156069898-49953e39b3ac") center/cover;
 }
 
+.box{
+background:rgba(255,255,255,0.9);
+padding:30px;
+border-radius:10px;
+width:300px;
+text-align:center;
 }
 
-function guest(){
-
-let g="Guest_"+Math.floor(Math.random()*10000)
-
-localStorage.setItem("name",g)
-
-window.location.href="/"
-
+input,select{
+width:100%;
+padding:10px;
+margin-top:8px;
 }
 
-</script>
+button{
+width:100%;
+padding:10px;
+margin-top:10px;
+border:none;
+color:white;
+cursor:pointer;
+}
+
+.login{background:#4CAF50;}
+.guest{background:black;}
+.register{background:#2196F3;}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="box">
+
+<h2>Florawings Chat</h2>
+
+<h3>Login</h3>
