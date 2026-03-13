@@ -27,38 +27,43 @@ const socket = io();
 let myName = "";
 let myRoom = "";
 
-/* Join room */
 document.getElementById("joinBtn").onclick = function(){
   myName = document.getElementById("name").value;
   myRoom = document.getElementById("room").value;
 
-  socket.emit("join",{name:myName, room:myRoom});
-};
+  socket.emit("join",{name:myName,room:myRoom});
+}
 
-/* Send message */
 document.getElementById("sendBtn").onclick = function(){
+
   const msg = document.getElementById("msg").value;
 
   socket.emit("chat",{
-    name: myName,
-    msg: msg
+    name:myName,
+    msg:msg
   });
 
-  document.getElementById("msg").value = "";
-};
+  document.getElementById("msg").value="";
+}
 
-/* Receive chat */
 socket.on("chat",(data)=>{
-  const div = document.createElement("div");
-  div.innerText = data.name + ": " + data.msg;
+
+  const div=document.createElement("div");
+
+  div.innerText=data.name + ": " + data.msg;
+
   document.getElementById("chat").appendChild(div);
+
 });
 
-/* System messages */
 socket.on("system",(msg)=>{
-  const div = document.createElement("div");
-  div.innerText = msg;
+
+  const div=document.createElement("div");
+
+  div.innerText=msg;
+
   document.getElementById("chat").appendChild(div);
+
 });
 </script>
 
