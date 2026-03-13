@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Florawings Admin</title>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial;
+background:#0f172a;
+color:white;
+}
+
+.panel{
+max-width:600px;
+margin:auto;
+margin-top:40px;
+background:#1e293b;
+padding:20px;
+border-radius:10px;
+}
+
+h2{
+text-align:center;
+}
+
+.users{
+background:#0f172a;
+padding:10px;
+margin-top:10px;
+border-radius:6px;
+}
+
+.user{
+display:flex;
+justify-content:space-between;
+margin-top:6px;
+padding:6px;
+background:#334155;
+border-radius:6px;
+}
+
+button{
+margin-left:4px;
+border:none;
+padding:4px 8px;
+border-radius:4px;
+cursor:pointer;
+}
+
+.kick{background:#ef4444;color:white;}
+.mute{background:#f59e0b;color:white;}
+.ban{background:black;color:white;}
+
+</style>
+
+<script src="/socket.io/socket.io.js"></script>
+
+</head>
+
+<body>
+
+<div class="panel">
+
+<h2>Florawings Admin Panel</h2>
+
+<div id="users"></div>
+
+</div>
+
+<script>
+
+let socket = io();
+
+socket.on("users",(list)=>{
+
+let box=document.getElementById("users");
+
+box.innerHTML="";
+
+list.forEach(u=>{
+
+let div=document.createElement("div");
+div.className="user";
+
+div.innerHTML = `
+<span>${u}</span>
+<div>
+<button class="kick" onclick="kick('${u}')">Kick</button>
+<button class="mute" onclick="mute('${u}')">Mute</button>
+<button class="ban" onclick="ban('${u}')">Ban</button>
+</div>
+`;
+
+box.appendChild(div);
+
+});
+
+});
+
+function kick(u){
+socket.emit("kick",u);
+}
+
+function mute(u){
+socket.emit("mute",u);
+}
+
+function ban(u){
+socket.emit("ban",u);
+}
+
+</script>
+
+</body>
+</html>
