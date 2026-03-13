@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Register</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{
+font-family:Arial;
+background:#0b1a33;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+}
+
+.box{
+background:white;
+padding:25px;
+width:320px;
+border-radius:10px;
+text-align:center;
+box-shadow:0 10px 25px rgba(0,0,0,0.4);
+}
+
+input{
+width:100%;
+padding:10px;
+margin:10px 0;
+border:1px solid #ccc;
+}
+
+button{
+width:100%;
+padding:12px;
+background:#2ecc71;
+border:none;
+color:white;
+font-size:16px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="box">
+
+<h2>Create Account</h2>
+
+<input id="user" placeholder="Username">
+<input id="pass" type="password" placeholder="Password">
+
+<button onclick="register()">Register</button>
+
+</div>
+
+<script>
+
+function register(){
+
+let u=document.getElementById("user").value
+let p=document.getElementById("pass").value
+
+if(p.length<6){
+alert("Password must be 6 characters")
+return
+}
+
+localStorage.setItem(u,p)
+
+alert("Account created")
+
+window.location="login.html"
+
+}
+
+</script>
+
+</body>
+</html>
