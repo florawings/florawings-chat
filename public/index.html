@@ -8,31 +8,23 @@
 body{
 margin:0;
 font-family:Arial;
-background:#f1f3f6;
-}
-
-.container{
 display:flex;
 height:100vh;
 }
 
-/* rooms */
-
-.rooms{
+.sidebar{
 width:200px;
-background:#1f2937;
+background:#1f2a3a;
 color:white;
 padding:10px;
 }
 
 .room{
-padding:8px;
-background:#374151;
+padding:10px;
+background:#2f3f55;
 margin-bottom:5px;
 cursor:pointer;
 }
-
-/* chat */
 
 .chat{
 flex:1;
@@ -42,9 +34,8 @@ flex-direction:column;
 
 .messages{
 flex:1;
-overflow:auto;
 padding:10px;
-background:white;
+overflow:auto;
 }
 
 .input{
@@ -60,44 +51,35 @@ border:none;
 
 .input button{
 padding:10px;
-background:#6366f1;
+background:#4CAF50;
 color:white;
 border:none;
 }
 
 </style>
-</head>
 
+</head>
 <body>
 
-<script>
-
-if(!localStorage.getItem("user")){
-location="/login.html"
-}
-
-</script>
-
-<div class="container">
-
-<div class="rooms">
+<div class="sidebar">
 
 <h3>Rooms</h3>
 
-<div class="room" onclick="joinRoom('main')">Main room</div>
-<div class="room" onclick="joinRoom('adult')">Adult room</div>
-<div class="room" onclick="joinRoom('hindi')">Hindi room</div>
+<div class="room" onclick="joinRoom('Main room')">Main room</div>
+<div class="room" onclick="joinRoom('Adult room')">Adult room</div>
+<div class="room" onclick="joinRoom('Hindi room')">Hindi room</div>
 
 </div>
 
 <div class="chat">
 
-<div id="chat" class="messages"></div>
+<div id="messages" class="messages"></div>
 
 <div class="input">
-<input id="msg" placeholder="Message">
+
+<input id="msg" placeholder="Type message...">
+
 <button onclick="send()">Send</button>
-</div>
 
 </div>
 
@@ -109,23 +91,23 @@ location="/login.html"
 
 const socket = io()
 
-const name = localStorage.getItem("user")
+let name = prompt("Enter name") || "Guest_" + Math.floor(Math.random()*1000)
 
-let room="main"
+let currentRoom = "Main room"
 
-socket.emit("join",{name,room})
+joinRoom(currentRoom)
 
-function joinRoom(r){
+function joinRoom(room){
 
-room=r
+currentRoom = room
 
-socket.emit("join",{name,room})
+socket.emit("join",{name:name,room:room})
 
 }
 
 function send(){
 
-const msg=document.getElementById("msg").value
+let msg = document.getElementById("msg").value
 
 socket.emit("chat",msg)
 
@@ -135,21 +117,21 @@ document.getElementById("msg").value=""
 
 socket.on("chat",(data)=>{
 
-const div=document.createElement("div")
+let div=document.createElement("div")
 
-div.innerText=data.name+": "+data.msg
+div.innerHTML="<b>"+data.name+":</b> "+data.msg
 
-document.getElementById("chat").appendChild(div)
+document.getElementById("messages").appendChild(div)
 
 })
 
 socket.on("system",(msg)=>{
 
-const div=document.createElement("div")
+let div=document.createElement("div")
 
-div.innerText=msg
+div.innerHTML="<i>"+msg+"</i>"
 
-document.getElementById("chat").appendChild(div)
+document.getElementById("messages").appendChild(div)
 
 })
 
