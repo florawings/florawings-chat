@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Florawings Chat</title>
+
+<style>
+
+body{
+background:#0b1b33;
+font-family:sans-serif;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+margin:0;
+}
+
+#chat{
+width:350px;
+background:white;
+border-radius:10px;
+overflow:hidden;
+}
+
+#messages{
+height:320px;
+overflow:auto;
+padding:10px;
+}
+
+#input{
+display:flex;
+border-top:1px solid #ddd;
+}
+
+#msg{
+flex:1;
+padding:10px;
+border:none;
+}
+
+button{
+padding:10px;
+background:#28a745;
+color:white;
+border:none;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="chat">
+
+<div id="messages"></div>
+
+<div id="input">
+<input id="msg" placeholder="Type message">
+<button onclick="send()">Send</button>
+</div>
+
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+
+let socket = io()
+
+let name = localStorage.getItem("chatname")
+
+if(!name){
+window.location="index.html"
+}
+
+socket.emit("join",name)
+
+socket.on("system",(msg)=>{
+let div=document.createElement("div")
+div.innerText=msg
+messages.appendChild(div)
+})
+
+socket.on("chat",(data)=>{
+let div=document.createElement("div")
+div.innerText=data.user + ": " + data.text
+messages.appendChild(div)
+})
+
+function send(){
+
+let msg=document.getElementById("msg").value
+
+socket.emit("chat",msg)
+
+document.getElementById("msg").value=""
+
+}
+
+</script>
+
+</body>
+</html>
