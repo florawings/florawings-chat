@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Florawings Chat</title>
+  <style>
+    body{font-family:Arial}
+    #chat{height:300px; overflow:auto; border:1px solid #ccc; padding:10px;}
+    #users{border:1px solid #ccc; padding:10px; margin-top:10px;}
+    .owner{color:red; font-weight:bold;}
+  </style>
+</head>
+<body>
+
+<h2>Florawings Chat</h2>
+
+<input id="name" placeholder="Name">
+<input id="room" placeholder="Room">
+<button onclick="join()">Join</button>
+
+<br><br>
+
+<input id="msg" placeholder="Message">
+<button onclick="send()">Send</button>
+
+<div id="chat"></div>
+
+<h3>Online Users</h3>
+<div id="users"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+const socket = io();
+
+function join(){
+  let name=document.getElementById("name").value;
+  let room=document.getElementById("room").value;
+  socket.emit("join",{name,room});
+}
+
+function send(){
+  let msg=document.getElementById("msg").value;
+  socket.emit("chat",msg);
+}
+
+socket.on("
