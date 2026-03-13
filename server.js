@@ -8,63 +8,57 @@ const io = new Server(server);
 
 app.use(express.static("public"));
 
-let users = {};
+const rooms = [
+ {name:"Main room", id:"main"},
+ {name:"Adult room", id:"adult"},
+ {name:"Hindi room", id:"hindi"},
+ {name:"Quiz room", id:"quiz"}
+];
 
-io.on("connection", (socket) => {
+let users = [];
 
-  socket.on("join", ({name, room}) => {
+app.get("/rooms",(req,res)=>{
+ res.json(rooms);
+});
 
-    socket.join(room);
+io.on("connection",(socket)=>{
 
-    users[socket.id] = {name, room};
+ socket.on("join",(data)=>{
 
-    io.to(room).emit("system", name + " joined");
+  socket.join(data.room);
 
-    updateUsers(room);
+  users.push({
+   id:socket.id,
+   name:data.name,
+   room:data.room
   });
 
-  socket.on("chat", (msg) => {
+  io.to(data.room).emit("system",data.name+" joined");
 
-    const user = users[socket.id];
-    if(!user) return;
+  io.to(data.room).emit(
+   "users",
+   users.filter(u=>u.room===data.room)
+  );
 
-    io.to(user.room).emit("chat", {
-      name:user.name,
-      msg:msg,
-      role:user.name === "Owner" ? "owner" : "user"
-    });
+ });
 
+ socket.on("chat",(data)=>{
+
+  io.to(data.room).emit("chat",{
+   name:data.name,
+   msg:data.msg
   });
 
-  socket.on("disconnect", () => {
+ });
 
-    const user = users[socket.id];
-    if(!user) return;
+ socket.on("disconnect",()=>{
 
-    io.to(user.room).emit("system", user.name + " left");
+  users = users.filter(u=>u.id!==socket.id);
 
-    delete users[socket.id];
-
-    updateUsers(user.room);
-
-  });
+ });
 
 });
 
-function updateUsers(room){
-
-  const list = Object.values(users)
-  .filter(u => u.room === room)
-  .map(u => u.name);
-
-  io.to(room).emit("users", list);
-
-}
-
-const PORT = process.env.PORT || 3000;
-
-server.listen(PORT, () => {
-
-  console.log("Server running on " + PORT);
-
+server.listen(3000,()=>{
+ console.log("server running");
 });
