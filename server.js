@@ -1,330 +1,94 @@
 const express = require("express")
 const http = require("http")
-const {Server} = require("socket.io")
+const { Server } = require("socket.io")
 
 const app = express()
 const server = http.createServer(app)
 const io = new Server(server)
 
-let users={}
-let muted={}
-let banned=[]
+let users = {}
+let muted = {}
+let banned = []
 
-app.get("/",(req,res)=>{
+app.use(express.static("public"))
 
-res.send(`
-<!DOCTYPE html>
-<html>
-<head>
+io.on("connection", (socket) => {
 
-<meta name="viewport" content="width=device-width, initial-scale=1">
+  socket.on("join", (name) => {
 
-<title>Florawings Chat</title>
+    if (banned.includes(name)) {
+      socket.emit("system","You are banned")
+      socket.disconnect()
+      return
+    }
 
-<style>
+    users[socket.id] = name
+    io.emit("system", name + " joined")
 
-body{
-margin:0;
-font-family:Arial;
-background:#0f172a;
-display:flex;
-justify-content:center;
-align-items:center;
-height:100vh;
-color:white;
-}
+  })
 
-.box{
-width:95%;
-max-width:700px;
-background:#1e293b;
-border-radius:10px;
-overflow:hidden;
-display:flex;
-}
+  socket.on("chat", (msg) => {
 
-.chat{
-flex:3;
-display:flex;
-flex-direction:column;
-background:white;
-color:black;
-}
+    let name = users[socket.id]
 
-.users{
-flex:1;
-background:#0f172a;
-padding:10px;
-}
+    if (muted[name]) {
+      socket.emit("system","You are muted")
+      return
+    }
 
-.messages{
-flex:1;
-overflow:auto;
-padding:10px;
-}
+    io.emit("chat", {
+      user:name,
+      text:msg
+    })
 
-.input{
-display:flex;
-padding:10px;
-border-top:1px solid #ccc;
-}
+  })
 
-.input input{
-flex:1;
-padding:8px;
-}
+  socket.on("kick", (target) => {
 
-button{
-margin-left:5px;
-padding:8px;
-}
+    for (let id in users) {
+      if (users[id] === target) {
+        io.to(id).emit("system","You were kicked")
+        io.sockets.sockets.get(id).disconnect()
+      }
+    }
 
-.login{
-position:absolute;
-top:20px;
-}
+  })
 
-</style>
+  socket.on("mute", (target) => {
+    muted[target] = true
+    io.emit("system", target + " muted")
+  })
 
-<script src="/socket.io/socket.io.js"></script>
+  socket.on("ban", (target) => {
 
-</head>
+    banned.push(target)
 
-<body>
+    for (let id in users) {
+      if (users[id] === target) {
+        io.sockets.sockets.get(id).disconnect()
+      }
+    }
 
-<div class="login">
+    io.emit("system", target + " banned")
 
-<input id="name" placeholder="username">
+  })
 
-<button onclick="login()">Join</button>
+  socket.on("disconnect", () => {
 
-</div>
+    let name = users[socket.id]
 
-<div class="box">
+    delete users[socket.id]
 
-<div class="chat">
+    if(name){
+      io.emit("system", name + " left")
+    }
 
-<div class="messages" id="messages"></div>
-
-<div class="input">
-
-<input id="msg">
-
-<input type="file" id="img">
-
-<button onclick="send()">Send</button>
-
-</div>
-
-</div>
-
-<div class="users">
-
-<b>Online</b>
-
-<div id="users"></div>
-
-<hr>
-
-<b>Admin</b>
-
-<input id="adminUser" placeholder="username">
-
-<button onclick="kick()">Kick</button>
-<button onclick="mute()">Mute</button>
-<button onclick="ban()">Ban</button>
-
-</div>
-
-</div>
-
-<script>
-
-let socket = io()
-let name=""
-
-function login(){
-
-name=document.getElementById("name").value
-
-socket.emit("join",name)
-
-}
-
-socket.on("system",(msg)=>addMsg(msg))
-
-socket.on("chat",(data)=>{
-
-let div=document.createElement("div")
-
-if(data.type==="text"){
-div.innerText=data.name+": "+data.msg
-}
-
-if(data.type==="image"){
-div.innerHTML=data.name+"<br><img src='"+data.url+"' width='120'>"
-}
-
-document.getElementById("messages").appendChild(div)
+  })
 
 })
 
-socket.on("users",(list)=>{
+const PORT = process.env.PORT || 3000
 
-let box=document.getElementById("users")
-
-box.innerHTML=""
-
-list.forEach(u=>{
-
-let d=document.createElement("div")
-d.innerText=u
-
-box.appendChild(d)
-
-})
-
-})
-
-function send(){
-
-let text=document.getElementById("msg").value
-let file=document.getElementById("img").files[0]
-
-if(text){
-
-socket.emit("chat",{type:"text",msg:text})
-
-}
-
-if(file){
-
-let r=new FileReader()
-
-r.onload=function(e){
-
-socket.emit("chat",{type:"image",url:e.target.result})
-
-}
-
-r.readAsDataURL(file)
-
-}
-
-document.getElementById("msg").value=""
-
-}
-
-function kick(){
-
-socket.emit("kick",document.getElementById("adminUser").value)
-
-}
-
-function mute(){
-
-socket.emit("mute",document.getElementById("adminUser").value)
-
-}
-
-function ban(){
-
-socket.emit("ban",document.getElementById("adminUser").value)
-
-}
-
-function addMsg(m){
-
-let d=document.createElement("div")
-
-d.innerText=m
-
-document.getElementById("messages").appendChild(d)
-
-}
-
-</script>
-
-</body>
-</html>
-`)
-
-})
-
-io.on("connection",(socket)=>{
-
-socket.on("join",(name)=>{
-
-if(banned.includes(name)){
-socket.emit("system","You are banned")
-socket.disconnect()
-return
-}
-
-users[socket.id]=name
-
-io.emit("system",name+" joined")
-
-updateUsers()
-
-})
-
-socket.on("chat",(data)=>{
-
-let name=users[socket.id]
-
-if(muted[name]) return
-
-io.emit("chat",{name,...data})
-
-})
-
-socket.on("kick",(u)=>{
-
-for(let id in users){
-if(users[id]===u){
-io.sockets.sockets.get(id)?.disconnect()
-}
-}
-
-})
-
-socket.on("mute",(u)=>{
-
-muted[u]=true
-
-})
-
-socket.on("ban",(u)=>{
-
-banned.push(u)
-
-})
-
-socket.on("disconnect",()=>{
-
-let name=users[socket.id]
-
-delete users[socket.id]
-
-io.emit("system",name+" left")
-
-updateUsers()
-
-})
-
-function updateUsers(){
-
-io.emit("users",Object.values(users))
-
-}
-
-})
-
-const PORT=process.env.PORT||3000
-
-server.listen(PORT,()=>{
-
-console.log("Server running")
-
+server.listen(PORT, () => {
+  console.log("Server running on " + PORT)
 })
