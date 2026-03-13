@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Florawings Chat</title>
 
@@ -36,17 +37,6 @@ text-align:center;
 font-size:18px;
 }
 
-.rooms{
-background:#1e293b;
-color:white;
-padding:10px;
-font-size:14px;
-}
-
-.rooms div{
-padding:6px;
-}
-
 .messages{
 flex:1;
 padding:10px;
@@ -59,3 +49,126 @@ font-size:14px;
 display:flex;
 padding:8px;
 background:white;
+border-top:1px solid #ddd;
+}
+
+.msgInput input{
+flex:1;
+padding:8px;
+border:1px solid #ccc;
+border-radius:6px;
+}
+
+.msgInput button{
+margin-left:6px;
+padding:8px 14px;
+background:#22c55e;
+border:none;
+color:white;
+border-radius:6px;
+}
+
+</style>
+
+<script src="/socket.io/socket.io.js"></script>
+
+</head>
+
+<body>
+
+<div class="chatBox">
+
+<div class="header">
+Florawings Chat
+</div>
+
+<div class="messages" id="messages"></div>
+
+<div class="msgInput">
+<input id="msg" placeholder="Type message">
+<input type="file" id="img">
+<button onclick="send()">Send</button>
+</div>
+
+</div>
+
+<script>
+
+let socket = io();
+
+let name = localStorage.getItem("name");
+
+if(!name){
+window.location.href="/login.html";
+}
+
+socket.emit("join",name);
+
+socket.on("system",(msg)=>{
+addMsg(msg);
+});
+
+socket.on("chat",(data)=>{
+
+let div=document.createElement("div");
+
+if(data.type==="text"){
+div.innerText=data.name+": "+data.msg;
+}
+
+if(data.type==="image"){
+div.innerHTML=data.name+"<br><img src='"+data.url+"' width='150'>";
+}
+
+document.getElementById("messages").appendChild(div);
+
+document.getElementById("messages").scrollTop=999999;
+
+});
+
+function send(){
+
+let text=document.getElementById("msg").value;
+let file=document.getElementById("img").files[0];
+
+if(text){
+
+socket.emit("chat",{type:"text",msg:text});
+
+addMsg(name+": "+text);
+
+}
+
+if(file){
+
+let reader=new FileReader();
+
+reader.onload=function(e){
+
+socket.emit("chat",{type:"image",url:e.target.result});
+
+};
+
+reader.readAsDataURL(file);
+
+}
+
+document.getElementById("msg").value="";
+document.getElementById("img").value="";
+
+}
+
+function addMsg(m){
+
+let div=document.createElement("div");
+
+div.innerText=m;
+
+document.getElementById("messages").appendChild(div);
+
+}
+
+</script>
+
+</body>
+</html>
