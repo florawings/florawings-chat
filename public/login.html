@@ -1,47 +1,18 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title>Florawings Chat</title>
-</head>
-
-<body>
-
-<h2>Login</h2>
-
-<input id="user" placeholder="username"><br>
-<input id="pass" type="password" placeholder="password"><br>
-
-<button onclick="login()">Login</button>
-
-<h3>Register</h3>
-
-<input id="ruser" placeholder="username"><br>
-<input id="remail" placeholder="email"><br>
-<input id="rpass" type="password" placeholder="password"><br>
-<input id="rdob" type="date"><br>
-
-<select id="rcountry">
-<option>India</option>
-<option>USA</option>
-<option>UK</option>
-<option>Pakistan</option>
-<option>Bangladesh</option>
-</select>
-
-<br>
-
-<button onclick="register()">Register</button>
-
 <script>
 
 async function login(){
 
+let username = document.getElementById("user").value
+let password = document.getElementById("pass").value
+
 let res = await fetch("/login",{
 method:"POST",
-headers:{"Content-Type":"application/json"},
+headers:{
+"Content-Type":"application/json"
+},
 body:JSON.stringify({
-username:document.getElementById("user").value,
-password:document.getElementById("pass").value
+username:username,
+password:password
 })
 })
 
@@ -50,41 +21,27 @@ let data = await res.json()
 if(data.ok){
 
 localStorage.setItem("name",data.name)
-location.href="/"
+localStorage.setItem("role",data.role)
+localStorage.setItem("dp",data.dp)
+
+window.location.href="/"
 
 }else{
-alert("wrong login")
-}
+
+alert("Login failed")
 
 }
 
-async function register(){
-
-let res = await fetch("/register",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({
-
-username:document.getElementById("ruser").value,
-email:document.getElementById("remail").value,
-password:document.getElementById("rpass").value,
-dob:document.getElementById("rdob").value,
-country:document.getElementById("rcountry").value
-
-})
-})
-
-let data = await res.json()
-
-if(data.ok){
-alert("registered successfully")
-}else{
-alert(data.msg)
 }
+
+function guest(){
+
+let g="Guest_"+Math.floor(Math.random()*10000)
+
+localStorage.setItem("name",g)
+
+window.location.href="/"
 
 }
 
 </script>
-
-</body>
-</html>
