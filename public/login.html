@@ -4,6 +4,7 @@
 <title>Florawings Chat</title>
 
 <style>
+
 body{
 margin:0;
 font-family:Arial;
@@ -18,7 +19,7 @@ background:url("https://images.unsplash.com/photo-1529156069898-49953e39b3ac") c
 background:rgba(255,255,255,0.9);
 padding:30px;
 border-radius:10px;
-width:300px;
+width:320px;
 text-align:center;
 }
 
@@ -35,6 +36,7 @@ margin-top:10px;
 border:none;
 color:white;
 cursor:pointer;
+font-size:15px;
 }
 
 .login{background:#4CAF50;}
@@ -52,3 +54,106 @@ cursor:pointer;
 <h2>Florawings Chat</h2>
 
 <h3>Login</h3>
+
+<input id="user" placeholder="Username">
+<input id="pass" type="password" placeholder="Password">
+
+<button class="login" onclick="login()">Login</button>
+<button class="guest" onclick="guest()">Guest Login</button>
+
+<hr>
+
+<h3>Register</h3>
+
+<input id="ruser" placeholder="Username">
+<input id="remail" placeholder="Email">
+<input id="rpass" type="password" placeholder="Password">
+<input id="rdob" type="date">
+
+<select id="rcountry">
+<option>India</option>
+<option>USA</option>
+<option>UK</option>
+<option>Pakistan</option>
+<option>Bangladesh</option>
+</select>
+
+<button class="register" onclick="register()">Register</button>
+
+</div>
+
+<script>
+
+async function login(){
+
+let res = await fetch("/login",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+username:document.getElementById("user").value,
+password:document.getElementById("pass").value
+})
+})
+
+let data = await res.json()
+
+if(data.ok){
+
+localStorage.setItem("name",data.name)
+localStorage.setItem("role",data.role)
+localStorage.setItem("dp",data.dp)
+
+window.location.href="/"
+
+}else{
+
+alert("Wrong username or password")
+
+}
+
+}
+
+function guest(){
+
+let g="Guest_"+Math.floor(Math.random()*10000)
+
+localStorage.setItem("name",g)
+
+window.location.href="/"
+
+}
+
+async function register(){
+
+let res = await fetch("/register",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+
+username:document.getElementById("ruser").value,
+email:document.getElementById("remail").value,
+password:document.getElementById("rpass").value,
+dob:document.getElementById("rdob").value,
+country:document.getElementById("rcountry").value
+
+})
+})
+
+let data = await res.json()
+
+if(data.ok){
+
+alert("Registration successful")
+
+}else{
+
+alert(data.msg)
+
+}
+
+}
+
+</script>
+
+</body>
+</html>
