@@ -1,84 +1,87 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Florawings Chat Login</title>
-
-<style>
-
-body{
-margin:0;
-font-family:Arial;
-background:#111;
-display:flex;
-justify-content:center;
-align-items:center;
-height:100vh;
-color:white;
-}
-
-.box{
-background:#1f2937;
-padding:30px;
-width:320px;
-border-radius:10px;
-}
-
-input{
-width:100%;
-padding:10px;
-margin-top:10px;
-border:none;
-border-radius:5px;
-}
-
-button{
-width:100%;
-padding:12px;
-margin-top:10px;
-border:none;
-border-radius:6px;
-font-weight:bold;
-}
-
-.login{background:#22c55e;color:white;}
-.guest{background:#6366f1;color:white;}
-.register{background:#f59e0b;color:white;}
-
-</style>
+<title>Florawings Chat</title>
 </head>
 
 <body>
 
-<div class="box">
+<h2>Login</h2>
 
-<h2>Florawings Chat</h2>
+<input id="user" placeholder="username"><br>
+<input id="pass" type="password" placeholder="password"><br>
 
-<input id="user" placeholder="Username">
-<input id="pass" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
 
-<button class="login" onclick="login()">Login</button>
+<h3>Register</h3>
 
-<button class="guest" onclick="guest()">Guest Login</button>
+<input id="ruser" placeholder="username"><br>
+<input id="remail" placeholder="email"><br>
+<input id="rpass" type="password" placeholder="password"><br>
+<input id="rdob" type="date"><br>
 
-<button class="register" onclick="register()">Register</button>
+<select id="rcountry">
+<option>India</option>
+<option>USA</option>
+<option>UK</option>
+<option>Pakistan</option>
+<option>Bangladesh</option>
+</select>
 
-</div>
+<br>
+
+<button onclick="register()">Register</button>
 
 <script>
 
-function login(){
-localStorage.setItem("user",document.getElementById("user").value)
-window.location="/"
+async function login(){
+
+let res = await fetch("/login",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+username:document.getElementById("user").value,
+password:document.getElementById("pass").value
+})
+})
+
+let data = await res.json()
+
+if(data.ok){
+
+localStorage.setItem("name",data.name)
+location.href="/"
+
+}else{
+alert("wrong login")
 }
 
-function guest(){
-const guest="Guest_"+Math.floor(Math.random()*9999)
-localStorage.setItem("user",guest)
-window.location="/"
 }
 
-function register(){
-alert("Register system next step me banega")
+async function register(){
+
+let res = await fetch("/register",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+
+username:document.getElementById("ruser").value,
+email:document.getElementById("remail").value,
+password:document.getElementById("rpass").value,
+dob:document.getElementById("rdob").value,
+country:document.getElementById("rcountry").value
+
+})
+})
+
+let data = await res.json()
+
+if(data.ok){
+alert("registered successfully")
+}else{
+alert(data.msg)
+}
+
 }
 
 </script>
