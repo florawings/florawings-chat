@@ -1,56 +1,88 @@
 const express = require("express")
 const http = require("http")
-const { Server } = require("socket.io")
+const {Server} = require("socket.io")
+const bodyParser = require("body-parser")
 
 const app = express()
 const server = http.createServer(app)
 const io = new Server(server)
 
 app.use(express.static("public"))
+app.use(bodyParser.json())
 
-let users = {}
+let usersDB = []
 
-io.on("connection", (socket) => {
+// REGISTER
+app.post("/register",(req,res)=>{
 
-  socket.on("join", ({name, room}) => {
+const {username,email,password,dob,country}=req.body
 
-    socket.join(room)
+if(!username || !email || !password){
+return res.json({ok:false,msg:"Missing fields"})
+}
 
-    users[socket.id] = { name, room }
+let exist = usersDB.find(u=>u.email===email)
 
-    io.to(room).emit("system", name + " joined")
+if(exist){
+return res.json({ok:false,msg:"Email already registered"})
+}
 
-  })
+usersDB.push({username,email,password,dob,country})
 
-  socket.on("chat", (msg) => {
-
-    const user = users[socket.id]
-
-    if(!user) return
-
-    io.to(user.room).emit("chat", {
-      name: user.name,
-      msg: msg
-    })
-
-  })
-
-  socket.on("disconnect", () => {
-
-    const user = users[socket.id]
-
-    if(user){
-      io.to(user.room).emit("system", user.name + " left")
-    }
-
-    delete users[socket.id]
-
-  })
+res.json({ok:true})
 
 })
 
-const PORT = process.env.PORT || 3000
+// LOGIN
+app.post("/login",(req,res)=>{
 
-server.listen(PORT, () => {
-  console.log("Server running on port " + PORT)
+const {username,password}=req.body
+
+let user = usersDB.find(
+u=>u.username===username && u.password===password
+)
+
+if(!user){
+return res.json({ok:false})
+}
+
+res.json({ok:true,name:user.username})
+
+})
+
+// CHAT
+
+let online = {}
+
+io.on("connection",(socket)=>{
+
+socket.on("join",(name)=>{
+
+online[socket.id]=name
+io.emit("msg",name+" joined")
+
+})
+
+socket.on("chat",(data)=>{
+
+io.emit("msg",data.name+": "+data.msg)
+
+})
+
+socket.on("disconnect",()=>{
+
+let name=online[socket.id]
+
+if(name){
+io.emit("msg",name+" left")
+}
+
+delete online[socket.id]
+
+})
+
+})
+
+server.listen(3000,()=>{
+console.log("Server started")
 })
