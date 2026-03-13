@@ -2,49 +2,54 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Florawings Login</title>
+<title>Florawings Chat</title>
 
 <style>
+
 body{
 margin:0;
-font-family:Arial;
-background:#0f172a;
 height:100vh;
 display:flex;
 align-items:center;
 justify-content:center;
+font-family:sans-serif;
+background:url("https://images.unsplash.com/photo-1529156069898-49953e39b3ac") no-repeat center;
+background-size:cover;
 }
 
 .box{
 background:white;
 padding:25px;
-width:320px;
-border-radius:10px;
+width:280px;
 text-align:center;
+border-radius:10px;
 box-shadow:0 10px 25px rgba(0,0,0,0.4);
+}
+
+h2{
+color:#e91e63;
+margin-bottom:15px;
 }
 
 input{
 width:100%;
-padding:10px;
-margin-top:8px;
+padding:8px;
+margin:5px 0;
 border:1px solid #ccc;
-border-radius:6px;
 }
 
 button{
 width:100%;
 padding:10px;
-margin-top:10px;
+margin-top:6px;
 border:none;
-border-radius:6px;
 color:white;
 cursor:pointer;
 }
 
-.login{background:#22c55e;}
+.login{background:#4CAF50;}
 .guest{background:black;}
-.register{background:#3b82f6;}
+.register{background:#2196F3;}
 
 </style>
 </head>
@@ -55,13 +60,11 @@ cursor:pointer;
 
 <h2>Florawings Chat</h2>
 
-<input id="name" placeholder="Username">
-<input id="pass" type="password" placeholder="Password">
+<input id="username" placeholder="Username">
+<input id="password" type="password" placeholder="Password">
 
 <button class="login" onclick="login()">Login</button>
-
 <button class="guest" onclick="guest()">Guest Login</button>
-
 <button class="register" onclick="register()">Register</button>
 
 </div>
@@ -69,34 +72,19 @@ cursor:pointer;
 <script>
 
 function login(){
-
-let name=document.getElementById("name").value;
-
-if(!name){
-alert("Enter username");
-return;
-}
-
-localStorage.setItem("name",name);
-
-window.location.href="/";
-
+let name=document.getElementById("username").value
+localStorage.setItem("chatname",name)
+window.location="index.html"
 }
 
 function guest(){
-
-let g="Guest_"+Math.floor(Math.random()*9999);
-
-localStorage.setItem("name",g);
-
-window.location.href="/";
-
+let name="Guest"+Math.floor(Math.random()*1000)
+localStorage.setItem("chatname",name)
+window.location="index.html"
 }
 
 function register(){
-
-alert("Register form next step me add hoga");
-
+alert("Register page next step me banega")
 }
 
 </script>
