@@ -1,94 +1,34 @@
 const express = require("express")
 const http = require("http")
-const { Server } = require("socket.io")
+const {Server} = require("socket.io")
+const path = require("path")
 
 const app = express()
 const server = http.createServer(app)
 const io = new Server(server)
 
+app.use(express.static(path.join(__dirname,"public")))
+
 let users = {}
-let muted = {}
-let banned = []
 
-app.use(express.static("public"))
+io.on("connection",(socket)=>{
 
-io.on("connection", (socket) => {
+socket.on("join",(name)=>{
+users[socket.id] = name
+io.emit("message",name + " joined")
+})
 
-  socket.on("join", (name) => {
+socket.on("chat",(data)=>{
+io.emit("message",users[socket.id] + ": " + data)
+})
 
-    if (banned.includes(name)) {
-      socket.emit("system","You are banned")
-      socket.disconnect()
-      return
-    }
-
-    users[socket.id] = name
-    io.emit("system", name + " joined")
-
-  })
-
-  socket.on("chat", (msg) => {
-
-    let name = users[socket.id]
-
-    if (muted[name]) {
-      socket.emit("system","You are muted")
-      return
-    }
-
-    io.emit("chat", {
-      user:name,
-      text:msg
-    })
-
-  })
-
-  socket.on("kick", (target) => {
-
-    for (let id in users) {
-      if (users[id] === target) {
-        io.to(id).emit("system","You were kicked")
-        io.sockets.sockets.get(id).disconnect()
-      }
-    }
-
-  })
-
-  socket.on("mute", (target) => {
-    muted[target] = true
-    io.emit("system", target + " muted")
-  })
-
-  socket.on("ban", (target) => {
-
-    banned.push(target)
-
-    for (let id in users) {
-      if (users[id] === target) {
-        io.sockets.sockets.get(id).disconnect()
-      }
-    }
-
-    io.emit("system", target + " banned")
-
-  })
-
-  socket.on("disconnect", () => {
-
-    let name = users[socket.id]
-
-    delete users[socket.id]
-
-    if(name){
-      io.emit("system", name + " left")
-    }
-
-  })
+socket.on("disconnect",()=>{
+io.emit("message",users[socket.id] + " left")
+delete users[socket.id]
+})
 
 })
 
-const PORT = process.env.PORT || 3000
-
-server.listen(PORT, () => {
-  console.log("Server running on " + PORT)
+server.listen(process.env.PORT || 3000,()=>{
+console.log("Server running")
 })
