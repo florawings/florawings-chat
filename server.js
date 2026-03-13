@@ -1,64 +1,128 @@
-const express = require("express");
-const http = require("http");
-const { Server } = require("socket.io");
+const express = require("express")
+const http = require("http")
+const {Server} = require("socket.io")
 
-const app = express();
-const server = http.createServer(app);
-const io = new Server(server);
+const app = express()
+const server = http.createServer(app)
+const io = new Server(server)
 
-app.use(express.static("public"));
+app.use(express.json())
+app.use(express.static("public"))
 
-const rooms = [
- {name:"Main room", id:"main"},
- {name:"Adult room", id:"adult"},
- {name:"Hindi room", id:"hindi"},
- {name:"Quiz room", id:"quiz"}
-];
+let usersDB = []     // registered users
+let onlineUsers = []
+let messages = []
 
-let users = [];
+function createGuest(){
+ return "Guest_"+Math.floor(Math.random()*9000+1000)
+}
 
-app.get("/rooms",(req,res)=>{
- res.json(rooms);
-});
+app.post("/register",(req,res)=>{
+
+ const {username,password} = req.body
+
+ usersDB.push({
+  username,
+  password,
+  role:"user",
+  gold:100,
+  color:"#000000",
+  avatar:"default.png"
+ })
+
+ res.json({success:true})
+
+})
+
+app.post("/login",(req,res)=>{
+
+ const {username,password} = req.body
+
+ const user = usersDB.find(
+  u=>u.username===username && u.password===password
+ )
+
+ if(user){
+  res.json(user)
+ }else{
+  res.json({error:"invalid"})
+ }
+
+})
 
 io.on("connection",(socket)=>{
 
- socket.on("join",(data)=>{
+ let currentUser = {
+  name:createGuest(),
+  role:"guest",
+  gold:0,
+  color:"#000"
+ }
 
-  socket.join(data.room);
+ socket.on("loginUser",(user)=>{
+  currentUser = user
+ })
 
-  users.push({
+ socket.on("join",(room)=>{
+
+  socket.join(room)
+
+  onlineUsers.push({
    id:socket.id,
-   name:data.name,
-   room:data.room
-  });
+   name:currentUser.name
+  })
 
-  io.to(data.room).emit("system",data.name+" joined");
+  io.to(room).emit("system",currentUser.name+" joined")
 
-  io.to(data.room).emit(
-   "users",
-   users.filter(u=>u.room===data.room)
-  );
-
- });
+ })
 
  socket.on("chat",(data)=>{
 
-  io.to(data.room).emit("chat",{
-   name:data.name,
-   msg:data.msg
-  });
+  const msg = {
+   id:Date.now(),
+   name:currentUser.name,
+   msg:data.msg,
+   color:currentUser.color
+  }
 
- });
+  messages.push(msg)
+
+  io.emit("chat",msg)
+
+ })
+
+ socket.on("deleteMsg",(id)=>{
+
+  if(currentUser.role!=="guest"){
+
+   messages = messages.filter(m=>m.id!==id)
+
+   io.emit("deleteMsg",id)
+
+  }
+
+ })
+
+ socket.on("promote",(data)=>{
+
+  if(currentUser.role==="owner"){
+
+   const u = usersDB.find(x=>x.username===data.user)
+
+   if(u){
+    u.role="moderator"
+   }
+
+  }
+
+ })
 
  socket.on("disconnect",()=>{
+  onlineUsers = onlineUsers.filter(u=>u.id!==socket.id)
+ })
 
-  users = users.filter(u=>u.id!==socket.id);
-
- });
-
-});
+})
 
 server.listen(3000,()=>{
- console.log("server running");
-});
+ console.log("Server running")
+})
