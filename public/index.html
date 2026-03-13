@@ -3,73 +3,80 @@
 <head>
 <title>Florawings Chat</title>
 
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
 <style>
 
 body{
 margin:0;
 font-family:Arial;
+background:#0f172a;
+display:flex;
+justify-content:center;
+align-items:center;
 height:100vh;
-background:url("https://images.unsplash.com/photo-1529156069898-49953e39b3ac") center/cover;
 }
 
-.loginBox{
-width:320px;
-margin:auto;
-margin-top:120px;
+.chatBox{
+width:95%;
+max-width:420px;
+height:520px;
 background:white;
-padding:20px;
-border-radius:10px;
+border-radius:12px;
+overflow:hidden;
+display:flex;
+flex-direction:column;
+box-shadow:0 10px 30px rgba(0,0,0,0.4);
+}
+
+.header{
+background:#2563eb;
+color:white;
+padding:12px;
 text-align:center;
+font-size:18px;
 }
 
-input{
-width:100%;
-padding:10px;
-margin-top:8px;
-}
-
-button{
-width:100%;
-padding:10px;
-margin-top:10px;
-border:none;
+.rooms{
+background:#1e293b;
 color:white;
-cursor:pointer;
-}
-
-.login{background:#4CAF50;}
-.guest{background:black;}
-.register{background:#2196F3;}
-
-.chat{
-display:none;
-height:100vh;
-}
-
-.sidebar{
-width:200px;
-background:#1f2a3a;
-color:white;
-float:left;
-height:100%;
 padding:10px;
+font-size:14px;
+}
+
+.rooms div{
+padding:6px;
 }
 
 .messages{
-margin-left:200px;
-height:90%;
-overflow:auto;
+flex:1;
 padding:10px;
-background:#f0f0f0;
+overflow:auto;
+background:#f1f5f9;
+font-size:14px;
 }
 
-.sendBox{
-position:fixed;
-bottom:0;
-left:200px;
-right:0;
+.msgInput{
+display:flex;
+padding:8px;
 background:white;
-padding:10px;
+border-top:1px solid #ddd;
+}
+
+.msgInput input{
+flex:1;
+padding:8px;
+border:1px solid #ccc;
+border-radius:6px;
+}
+
+.msgInput button{
+margin-left:6px;
+padding:8px 14px;
+background:#22c55e;
+border:none;
+color:white;
+border-radius:6px;
 }
 
 </style>
@@ -80,25 +87,14 @@ padding:10px;
 
 <body>
 
-<div class="loginBox" id="login">
+<div class="chatBox">
 
-<h2>Florawings Chat</h2>
-
-<input id="username" placeholder="Username">
-<input id="password" type="password" placeholder="Password">
-
-<button class="login" onclick="login()">Login</button>
-
-<button class="guest" onclick="guest()">Guest Login</button>
-
-<button class="register" onclick="registerPage()">Register</button>
-
+<div class="header">
+Florawings Chat
 </div>
 
-<div class="chat" id="chat">
-
-<div class="sidebar">
-<h3>Rooms</h3>
+<div class="rooms">
+Rooms<br>
 <div>Main room</div>
 <div>Adult room</div>
 <div>Hindi room</div>
@@ -106,8 +102,8 @@ padding:10px;
 
 <div class="messages" id="messages"></div>
 
-<div class="sendBox">
-<input id="msg" placeholder="message">
+<div class="msgInput">
+<input id="msg" placeholder="Type message">
 <button onclick="send()">Send</button>
 </div>
 
@@ -115,64 +111,28 @@ padding:10px;
 
 <script>
 
-let socket;
-let name;
-
-function login(){
-
-name=document.getElementById("username").value;
-
-if(!name){
-alert("Enter username");
-return;
-}
-
-startChat();
-
-}
-
-function guest(){
-
-name="Guest_"+Math.floor(Math.random()*9999);
-
-startChat();
-
-}
-
-function registerPage(){
-
-window.location.href="/login.html";
-
-}
-
-function startChat(){
-
-document.getElementById("login").style.display="none";
-document.getElementById("chat").style.display="block";
-
-socket=io();
+let socket = io();
+let name = localStorage.getItem("name") || "Guest_"+Math.floor(Math.random()*9999);
 
 socket.emit("join",name);
 
 socket.on("system",(msg)=>{
-
 addMsg(msg);
-
 });
 
 socket.on("chat",(data)=>{
-
 addMsg(data.name+": "+data.msg);
-
 });
-
-}
 
 function send(){
 
 let msg=document.getElementById("msg").value;
 
+if(!msg) return;
+
 socket.emit("chat",msg);
+
+addMsg(name+": "+msg);
 
 document.getElementById("msg").value="";
 
@@ -181,10 +141,11 @@ document.getElementById("msg").value="";
 function addMsg(m){
 
 let div=document.createElement("div");
-
 div.innerText=m;
 
 document.getElementById("messages").appendChild(div);
+
+document.getElementById("messages").scrollTop=999999;
 
 }
 
