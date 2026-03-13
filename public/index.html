@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 
 <title>Florawings Chat</title>
@@ -7,48 +8,27 @@
 <style>
 
 body{
-margin:0;
 font-family:Arial;
-}
-
-.container{
-display:flex;
-height:100vh;
-}
-
-.rooms{
-width:200px;
-border-right:1px solid #ccc;
-padding:10px;
-}
-
-.users{
-width:200px;
-border-left:1px solid #ccc;
-padding:10px;
-}
-
-.chatbox{
-flex:1;
-display:flex;
-flex-direction:column;
+background:#f0f2f5;
+margin:0;
 }
 
 #chat{
-flex:1;
+height:70vh;
 overflow:auto;
+background:white;
 padding:10px;
 }
 
-.input{
-display:flex;
-padding:10px;
-border-top:1px solid #ccc;
+.msg{
+margin-bottom:6px;
 }
 
-.input input{
-flex:1;
-padding:8px;
+button{
+background:#6366f1;
+color:white;
+border:none;
+padding:6px 12px;
 }
 
 </style>
@@ -57,134 +37,74 @@ padding:8px;
 
 <body>
 
-<div class="container">
-
-<div class="rooms">
-
-<h3>Rooms</h3>
-
-<div id="rooms"></div>
-
-</div>
-
-<div class="chatbox">
-
 <h2>Florawings Chat</h2>
 
 <input id="name" placeholder="Name">
 
+<input id="msg" placeholder="message">
+
+<button onclick="send()">Send</button>
+
 <div id="chat"></div>
-
-<div class="input">
-
-<input id="msg" placeholder="Message">
-
-<button id="sendBtn">Send</button>
-
-</div>
-
-</div>
-
-<div class="users">
-
-<h3>Online</h3>
-
-<div id="users"></div>
-
-</div>
-
-</div>
 
 <script src="/socket.io/socket.io.js"></script>
 
 <script>
 
-const socket = io();
+const socket = io()
 
-let myName="";
-let myRoom="";
+let myName = "Guest_"+Math.floor(Math.random()*1000)
 
-fetch("/rooms")
-.then(res=>res.json())
-.then(data=>{
+socket.emit("join","main")
 
-data.forEach(room=>{
+function send(){
 
-const div=document.createElement("div");
+const msg = document.getElementById("msg").value
 
-div.innerText=room.name;
-
-div.style.cursor="pointer";
-
-div.onclick=()=>{
-
-myName=document.getElementById("name").value;
-
-myRoom=room.id;
-
-socket.emit("join",{name:myName,room:myRoom});
-
-}
-
-document.getElementById("rooms").appendChild(div);
-
-});
-
-});
-
-document.getElementById("sendBtn").onclick=()=>{
-
-const msg=document.getElementById("msg").value;
-
-socket.emit("chat",{
-name:myName,
-room:myRoom,
-msg:msg
-});
-
-document.getElementById("msg").value="";
+socket.emit("chat",{msg})
 
 }
 
 socket.on("chat",(data)=>{
 
-const div=document.createElement("div");
+const div = document.createElement("div")
 
-div.innerText=data.name+": "+data.msg;
+div.className="msg"
 
-document.getElementById("chat").appendChild(div);
+div.innerHTML =
+`<span style="color:${data.color}">
+${data.name}: ${data.msg}
+</span>
+<button onclick="del(${data.id})">x</button>`
 
-});
+document.getElementById("chat").appendChild(div)
+
+})
+
+function del(id){
+
+socket.emit("deleteMsg",id)
+
+}
+
+socket.on("deleteMsg",(id)=>{
+
+location.reload()
+
+})
 
 socket.on("system",(msg)=>{
 
-const div=document.createElement("div");
+const div = document.createElement("div")
 
-div.innerText=msg;
+div.innerText = msg
 
-document.getElementById("chat").appendChild(div);
+document.getElementById("chat").appendChild(div)
 
-});
-
-socket.on("users",(users)=>{
-
-const box=document.getElementById("users");
-
-box.innerHTML="";
-
-users.forEach(u=>{
-
-const div=document.createElement("div");
-
-div.innerText=u.name;
-
-box.appendChild(div);
-
-});
-
-});
+})
 
 </script>
 
 </body>
+
 </html>
