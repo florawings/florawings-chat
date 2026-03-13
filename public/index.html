@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+
 <title>Florawings Chat</title>
 
 <style>
@@ -8,132 +9,89 @@
 body{
 margin:0;
 font-family:Arial;
-display:flex;
 height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+background:url("https://images.unsplash.com/photo-1529156069898-49953e39b3ac") center/cover;
 }
 
-.sidebar{
-width:200px;
-background:#1f2a3a;
-color:white;
-padding:10px;
+.box{
+background:rgba(255,255,255,0.9);
+padding:40px;
+border-radius:10px;
+text-align:center;
+width:280px;
 }
 
-.room{
-padding:10px;
-background:#2f3f55;
-margin-bottom:5px;
+h1{
+margin-top:0;
+color:#e91e63;
+}
+
+button{
+width:100%;
+padding:12px;
+margin-top:10px;
+border:none;
+border-radius:5px;
+font-size:16px;
 cursor:pointer;
 }
 
-.chat{
-flex:1;
-display:flex;
-flex-direction:column;
-}
-
-.messages{
-flex:1;
-padding:10px;
-overflow:auto;
-}
-
-.input{
-display:flex;
-border-top:1px solid #ccc;
-}
-
-.input input{
-flex:1;
-padding:10px;
-border:none;
-}
-
-.input button{
-padding:10px;
+.login{
 background:#4CAF50;
 color:white;
-border:none;
+}
+
+.guest{
+background:black;
+color:white;
+}
+
+.register{
+background:#2196F3;
+color:white;
 }
 
 </style>
 
 </head>
+
 <body>
 
-<div class="sidebar">
+<div class="box">
 
-<h3>Rooms</h3>
+<h1>Florawings Chat</h1>
 
-<div class="room" onclick="joinRoom('Main room')">Main room</div>
-<div class="room" onclick="joinRoom('Adult room')">Adult room</div>
-<div class="room" onclick="joinRoom('Hindi room')">Hindi room</div>
+<input id="user" placeholder="Username" style="width:100%;padding:10px;margin-top:10px">
 
-</div>
+<input id="pass" placeholder="Password" type="password" style="width:100%;padding:10px;margin-top:10px">
 
-<div class="chat">
+<button class="login" onclick="login()">Login</button>
 
-<div id="messages" class="messages"></div>
+<button class="guest" onclick="guest()">Guest Login</button>
 
-<div class="input">
-
-<input id="msg" placeholder="Type message...">
-
-<button onclick="send()">Send</button>
+<button class="register" onclick="register()">Register</button>
 
 </div>
-
-</div>
-
-<script src="/socket.io/socket.io.js"></script>
 
 <script>
 
-const socket = io()
-
-let name = prompt("Enter name") || "Guest_" + Math.floor(Math.random()*1000)
-
-let currentRoom = "Main room"
-
-joinRoom(currentRoom)
-
-function joinRoom(room){
-
-currentRoom = room
-
-socket.emit("join",{name:name,room:room})
-
+function login(){
+localStorage.setItem("name",document.getElementById("user").value)
+location.href="/"
 }
 
-function send(){
-
-let msg = document.getElementById("msg").value
-
-socket.emit("chat",msg)
-
-document.getElementById("msg").value=""
-
+function guest(){
+let g="Guest_"+Math.floor(Math.random()*1000)
+localStorage.setItem("name",g)
+location.href="/"
 }
 
-socket.on("chat",(data)=>{
-
-let div=document.createElement("div")
-
-div.innerHTML="<b>"+data.name+":</b> "+data.msg
-
-document.getElementById("messages").appendChild(div)
-
-})
-
-socket.on("system",(msg)=>{
-
-let div=document.createElement("div")
-
-div.innerHTML="<i>"+msg+"</i>"
-
-document.getElementById("messages").appendChild(div)
-
-})
+function register(){
+alert("Register system next step me banega")
+}
 
 </script>
 
